@@ -10,6 +10,7 @@ project(${project_name})
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_ALLOW_LOOSE_LOOPS TRUE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+set(CMAKE_BUILD_TYPE Debug)
 
 if(UNIX)
 #some compiler directives to make sure all warnings etc. are caught, 

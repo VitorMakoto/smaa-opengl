@@ -23,12 +23,12 @@
  * Global variables
  */
 
-sf::Window the_window;
-sf::Event the_event;
+GLFWwindow* the_window;
+//sf::Event the_event;
 
 float fps = 1.0f;
 int frames = 0;
-sf::Clock the_clock;
+//sf::Clock the_clock;
 std::string app_path;
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
@@ -76,16 +76,25 @@ void check_fbo();
 
 void get_app_path();
 
+void GLFW_error(int error, const char* description)
+{
+    std::cerr << "GLFW ERROR : " << error <<;
+//    fputs(description, stdout);
+}
+
+
 int main( int argc, char* args[] )
 {
-
+    glfwSetErrorCallback(GLFW_error);
+    
   if (!glfwInit())
   {
       printf("glfwInit() fail to initualize. \n");
       glfwTerminate();
       exit(-1);
   }
-  /*
+    
+    /*
    * Initialize OpenGL context
    */
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -93,24 +102,28 @@ int main( int argc, char* args[] )
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     
+//  the_window.create( sf::VideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, 32 ), "SMAA", sf::Style::Default );
+    the_window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Hello World", NULL, NULL);
+
+
+    if (!the_window)
+    {
+        std::cerr << "Couldn't initialize GLFW.\n";
+        glfwTerminate();
+        return -1;
+    }
     
+    glfwMakeContextCurrent(the_window);
+//    std::cerr << "currentContext " << glGetString(GL_VERSION);
     
     std::cerr << "OpenGL version supported by this platform " << glGetString(GL_VERSION);
-  the_window.create( sf::VideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, 32 ), "SMAA", sf::Style::Default );
-
-  if( !the_window.isOpen() )
-  {
-    std::cerr << "Couldn't initialize SFML.\n";
-    the_window.close();
-    exit( 1 );
-  }
 
   GLenum glew_error = glewInit();
 
   if( glew_error != GLEW_OK )
   {
     std::cerr << "Error initializing GLEW: " << glewGetErrorString( glew_error ) << "\n";
-    the_window.close();
+    glfwTerminate();
     exit( 1 );
   }
 
@@ -118,7 +131,7 @@ int main( int argc, char* args[] )
   {
     std::cerr << "OpenGL version supported by this platform " << glGetString(GL_VERSION);
     std::cerr << "Error: OpenGL 4.1 is required\n";
-    the_window.close();
+    glfwTerminate();
     exit( 1 );
   }
 
@@ -128,16 +141,24 @@ int main( int argc, char* args[] )
    * Initialize and load textures
    */
 
-  glEnable( GL_TEXTURE_2D );
-
+//  glEnable( GL_TEXTURE_2D );
+    get_opengl_error();
   glGenTextures( 1, &albedo_tex );
+    get_opengl_error();
   glBindTexture( GL_TEXTURE_2D, albedo_tex );
+    get_opengl_error();
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+    get_opengl_error();
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+    get_opengl_error();
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    get_opengl_error();
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    get_opengl_error();
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, 0 );
+    get_opengl_error();
 
+    
   glGenTextures( 1, &edge_tex );
   glBindTexture( GL_TEXTURE_2D, edge_tex );
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
@@ -145,7 +166,9 @@ int main( int argc, char* args[] )
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, 0 );
+    get_opengl_error();
 
+    
   glGenTextures( 1, &blend_tex );
   glBindTexture( GL_TEXTURE_2D, blend_tex );
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
@@ -153,6 +176,8 @@ int main( int argc, char* args[] )
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGBA, GL_FLOAT, 0 );
+
+    get_opengl_error();
 
   unsigned char* buffer = 0;
   FILE* f = 0;
@@ -163,7 +188,7 @@ int main( int argc, char* args[] )
   if( !f )
   {
     std::cerr << "Couldn't open smaa_area.raw.\n";
-    the_window.close();
+    glfwTerminate();
     exit( 1 );
   }
 
@@ -180,12 +205,14 @@ int main( int argc, char* args[] )
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RG8, ( GLsizei )AREATEX_WIDTH, ( GLsizei )AREATEX_HEIGHT, 0, GL_RG, GL_UNSIGNED_BYTE, buffer );
 
+    get_opengl_error();
+
   f = fopen( ( app_path + "smaa_search.raw" ).c_str(), "rb" );
 
   if( !f )
   {
     std::cerr << "Couldn't open smaa_search.raw.\n";
-    the_window.close();
+    glfwTerminate();
     exit( 1 );
   }
 
@@ -351,7 +378,7 @@ int main( int argc, char* args[] )
    */
 
   //MAIN LOOP
-  the_clock.restart();
+//  the_clock.restart();
 
   while( true )
   {
@@ -359,26 +386,26 @@ int main( int argc, char* args[] )
      * Handle events
      */
 
-    while( the_window.pollEvent( the_event ) )
-    {
-      if( the_event.type == sf::Event::Closed )
-      {
-        the_window.close();
-        exit( 0 );
-      }
-      else if( the_event.type == sf::Event::KeyPressed )
-      {
-        if( the_event.key.code == sf::Keyboard::Escape )
-        {
-          the_window.close();
-          exit( 0 );
-        }
-        else if( the_event.key.code == sf::Keyboard::Space )
-        {
-          do_effect = !do_effect;
-        }
-      }
-    }
+//    while( the_window.pollEvent( the_event ) )
+//    {
+//      if( the_event.type == sf::Event::Closed )
+//      {
+//        the_window.close();
+//        exit( 0 );
+//      }
+//      else if( the_event.type == sf::Event::KeyPressed )
+//      {
+//        if( the_event.key.code == sf::Keyboard::Escape )
+//        {
+//          the_window.close();
+//          exit( 0 );
+//        }
+//        else if( the_event.key.code == sf::Keyboard::Space )
+//        {
+//          do_effect = !do_effect;
+//        }
+//      }
+//    }
 
     /*
      * EDGE DETECTION PASS
@@ -470,20 +497,24 @@ int main( int argc, char* args[] )
      * Show the result
      */
 
-    the_window.display();
+      // Swap front and back buffers
+      glfwSwapBuffers(the_window);
+      
+      //Poll for and process events
+      glfwPollEvents();
 
     //some benchmarking :D
     frames++;
 
-    if( the_clock.getElapsedTime().asMilliseconds() > 1000.0f )
-    {
-      int timepassed = the_clock.getElapsedTime().asMilliseconds();
-      fps = 1000.0f / ( ( float ) timepassed / ( float ) frames );
-      std::cout << "FPS: " << fps << " Time: " << ( float ) timepassed / ( float ) frames << "\n";
-      frames = 0;
-      timepassed = 0;
-      the_clock.restart();
-    }
+//    if( the_clock.getElapsedTime().asMilliseconds() > 1000.0f )
+//    {
+//      int timepassed = the_clock.getElapsedTime().asMilliseconds();
+//      fps = 1000.0f / ( ( float ) timepassed / ( float ) frames );
+//      std::cout << "FPS: " << fps << " Time: " << ( float ) timepassed / ( float ) frames << "\n";
+//      frames = 0;
+//      timepassed = 0;
+//      the_clock.restart();
+//    }
   }
 
   return 0;
@@ -519,13 +550,13 @@ void get_app_path()
   if( length < 0 )
   {
     std::cerr << "Couldnt read app path. Error resolving symlink /proc/self/exe.\n";
-    the_window.close();
+    glfwTerminate();
   }
 
   if( length >= 1024 )
   {
     std::cerr << "Couldnt read app path. Path too long. Truncated.\n";
-    the_window.close();
+    glfwTerminate();
   }
 
   /* I don't know why, but the string this readlink() function
@@ -540,7 +571,7 @@ void get_app_path()
   if( GetModuleFileName( 0, ( char* )&fullpath, sizeof( fullpath ) ) == 0 )
   {
     std::cerr << "Couldn't get the app path.\n";
-    the_window.close();
+    glfwTerminate();
   }
 
 #endif
@@ -590,8 +621,7 @@ void shader_include( std::string& shader )
     else
     {
       std::cerr << "Couldn't include shader file: " << app_path + file << "\n";
-      the_window.close();
-    }
+      glfwTerminate();    }
 
     shader.replace( start_pos, ( length + 1 ) - start_pos, content );
     start_pos += content.length();
@@ -694,7 +724,7 @@ void check_fbo()
   if( glCheckFramebufferStatus( GL_FRAMEBUFFER ) != GL_FRAMEBUFFER_COMPLETE )
   {
     std::cerr << "FBO not complete.\n";
-    the_window.close();
+    glfwTerminate();
     exit( 1 );
   }
 }
@@ -760,10 +790,10 @@ void get_opengl_error( bool ignore )
     error = glGetError();
   }
 
-  if( got_error && !ignore )
+  if( got_error )
   {
     std::cerr << errorstring;
-    the_window.close();
+    glfwTerminate();
     return;
   }
 }
