@@ -279,7 +279,7 @@
  * won't be used.
  */
 
-#if SMAA_PRESET_LOW == 1
+/*#if SMAA_PRESET_LOW == 1
 #define SMAA_THRESHOLD 0.15
 #define SMAA_MAX_SEARCH_STEPS 4
 #define SMAA_MAX_SEARCH_STEPS_DIAG 0
@@ -294,12 +294,12 @@
 #define SMAA_MAX_SEARCH_STEPS 16
 #define SMAA_MAX_SEARCH_STEPS_DIAG 8
 #define SMAA_CORNER_ROUNDING 25
-#elif SMAA_PRESET_ULTRA == 1
+#elif SMAA_PRESET_ULTRA == 1*/
 #define SMAA_THRESHOLD 0.05
 #define SMAA_MAX_SEARCH_STEPS 32
 #define SMAA_MAX_SEARCH_STEPS_DIAG 16
 #define SMAA_CORNER_ROUNDING 25
-#endif
+//#endif
 
 //-----------------------------------------------------------------------------
 // Configurable Defines
@@ -483,42 +483,7 @@
 //-----------------------------------------------------------------------------
 // Porting Functions
 
-#if SMAA_HLSL_3 == 1
-#define SMAATexture2D sampler2D
-#define SMAASampleLevelZero(tex, coord) tex2Dlod(tex, float4(coord, 0.0, 0.0))
-#define SMAASampleLevelZeroPoint(tex, coord) tex2Dlod(tex, float4(coord, 0.0, 0.0))
-#define SMAASample(tex, coord) tex2D(tex, coord)
-#define SMAASamplePoint(tex, coord) tex2D(tex, coord)
-#define SMAASampleLevelZeroOffset(tex, coord, offset) tex2Dlod(tex, float4(coord + offset * SMAA_PIXEL_SIZE, 0.0, 0.0))
-#define SMAASampleOffset(tex, coord, offset) tex2D(tex, coord + offset * SMAA_PIXEL_SIZE)
-#define SMAALerp(a, b, t) lerp(a, b, t)
-#define SMAASaturate(a) saturate(a)
-#define SMAAMad(a, b, c) mad(a, b, c)
-#define SMAA_FLATTEN [flatten]
-#define SMAA_BRANCH [branch]
-#endif
-#if SMAA_HLSL_4 == 1 || SMAA_HLSL_4_1 == 1
-SamplerState LinearSampler { Filter = MIN_MAG_LINEAR_MIP_POINT; AddressU = Clamp; AddressV = Clamp; };
-SamplerState PointSampler { Filter = MIN_MAG_MIP_POINT; AddressU = Clamp; AddressV = Clamp; };
-#define SMAATexture2D Texture2D
-#define SMAASampleLevelZero(tex, coord) tex.SampleLevel(LinearSampler, coord, 0)
-#define SMAASampleLevelZeroPoint(tex, coord) tex.SampleLevel(PointSampler, coord, 0)
-#define SMAASample(tex, coord) SMAASampleLevelZero(tex, coord)
-#define SMAASamplePoint(tex, coord) SMAASampleLevelZeroPoint(tex, coord)
-#define SMAASampleLevelZeroOffset(tex, coord, offset) tex.SampleLevel(LinearSampler, coord, 0, offset)
-#define SMAASampleOffset(tex, coord, offset) SMAASampleLevelZeroOffset(tex, coord, offset)
-#define SMAALerp(a, b, t) lerp(a, b, t)
-#define SMAASaturate(a) saturate(a)
-#define SMAAMad(a, b, c) mad(a, b, c)
-#define SMAA_FLATTEN [flatten]
-#define SMAA_BRANCH [branch]
-#define SMAATexture2DMS2 Texture2DMS<float4, 2>
-#define SMAALoad(tex, pos, sample) tex.Load(pos, sample)
-#endif
-#if SMAA_HLSL_4_1 == 1
-#define SMAAGather(tex, coord) tex.Gather(LinearSampler, coord, 0)
-#endif
-#if SMAA_GLSL_3 == 1 || SMAA_GLSL_4 == 1
+
 #define SMAATexture2D sampler2D
 #define SMAASampleLevelZero(tex, coord) textureLod(tex, coord, 0.0)
 #define SMAASampleLevelZeroPoint(tex, coord) textureLod(tex, coord, 0.0)
@@ -536,14 +501,14 @@ SamplerState PointSampler { Filter = MIN_MAG_MIP_POINT; AddressU = Clamp; Addres
 #define int2 ivec2
 #define int3 ivec3
 #define int4 ivec4
-#endif
-#if SMAA_GLSL_3 == 1
-#define SMAAMad(a, b, c) (a * b + c)
-#endif
-#if SMAA_GLSL_4 == 1
+
+//#if SMAA_GLSL_3 == 1
+//#define SMAAMad(a, b, c) (a * b + c)
+//#endif
+//#if SMAA_GLSL_4 == 1
 #define SMAAMad(a, b, c) fma(a, b, c)
 #define SMAAGather(tex, coord) textureGather(tex, coord)
-#endif
+//#endif
 
 //-----------------------------------------------------------------------------
 // Misc functions
@@ -554,14 +519,14 @@ SamplerState PointSampler { Filter = MIN_MAG_MIP_POINT; AddressU = Clamp; Addres
 float3 SMAAGatherNeighbours(float2 texcoord,
                             float4 offset[3],
                             SMAATexture2D tex) {
-    #if SMAA_HLSL_4_1 == 1 || SMAA_GLSL_4 == 1
+  //    #if SMAA_HLSL_4_1 == 1 || SMAA_GLSL_4 == 1
     return SMAAGather(tex, texcoord + SMAA_PIXEL_SIZE * float2(-0.5, -0.5)).grb;
-    #else
-    float P = SMAASample(tex, texcoord).r;
-    float Pleft = SMAASample(tex, offset[0].xy).r;
-    float Ptop  = SMAASample(tex, offset[0].zw).r;
-    return float3(P, Pleft, Ptop);
-    #endif
+    //    #else
+    //    float P = SMAASample(tex, texcoord).r;
+    //    float Pleft = SMAASample(tex, offset[0].xy).r;
+    //    float Ptop  = SMAASample(tex, offset[0].zw).r;
+    //    return float3(P, Pleft, Ptop);
+    //    #endif
 }
 
 /**

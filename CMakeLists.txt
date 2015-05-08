@@ -33,12 +33,6 @@ MESSAGE(STATUS "CMAKE_LIBRARY:" ${GLEW_LIBRARIES})
 
 endif()
 
-find_package(SFML 2 COMPONENTS window system audio)
-include_directories(${SFML_INCLUDE_DIR})
-link_libraries(${SFML_LIBRARIES})
-
-MESSAGE(STATUS "CMAKE_LIBRARY:" ${SFML_LIBRARIES})
-
 find_package(OpenGL REQUIRED)
 include_directories(${OpenGL_INCLUDE_DIRS})
 link_directories(${OpenGL_LIBRARY_DIRS})

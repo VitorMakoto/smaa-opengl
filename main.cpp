@@ -78,7 +78,7 @@ void get_app_path();
 
 void GLFW_error(int error, const char* description)
 {
-    std::cerr << "GLFW ERROR : " << error <<;
+ //   std::cerr << "GLFW ERROR : " << error <<;
 //    fputs(description, stdout);
 }
 
@@ -114,12 +114,16 @@ int main( int argc, char* args[] )
     }
     
     glfwMakeContextCurrent(the_window);
-//    std::cerr << "currentContext " << glGetString(GL_VERSION);
-    
+    std::cerr << "currentContext " << glGetString(GL_VERSION);
+
     std::cerr << "OpenGL version supported by this platform " << glGetString(GL_VERSION);
 
+  glewExperimental = true;
   GLenum glew_error = glewInit();
 
+  if (!glfwGetCurrentContext()) {
+    std::cerr << "FUUUUUUCK";
+  }
   if( glew_error != GLEW_OK )
   {
     std::cerr << "Error initializing GLEW: " << glewGetErrorString( glew_error ) << "\n";
@@ -140,13 +144,14 @@ int main( int argc, char* args[] )
   /*
    * Initialize and load textures
    */
-
-//  glEnable( GL_TEXTURE_2D );
     get_opengl_error();
+  glEnable( GL_TEXTURE_2D );
+    get_opengl_error();
+    glBindTexture(GL_TEXTURE_2D,0);
   glGenTextures( 1, &albedo_tex );
     get_opengl_error();
   glBindTexture( GL_TEXTURE_2D, albedo_tex );
-    get_opengl_error();
+  get_opengl_error();
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
     get_opengl_error();
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
@@ -243,6 +248,9 @@ int main( int argc, char* args[] )
   glBindFramebuffer( GL_FRAMEBUFFER, albedo_fbo );
   glDrawBuffers( 1, modes );
   glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, albedo_tex, 0 );
+
+  std::cout << "\n" << albedo_tex;
+  std::cout << "\n" << blend_tex;
 
   check_fbo();
 
@@ -527,6 +535,8 @@ int main( int argc, char* args[] )
 //this function grabs the app path, so that we can load the needed files at runtime
 void get_app_path()
 {
+  app_path = std::string("/Users/igoroliveira/work/smaa-opengl/");
+  return;
   char fullpath[1024];
 
   /* /proc/self is a symbolic link to the process-ID subdir
@@ -657,6 +667,7 @@ void create_shader( std::string* vs_text, std::string* ps_text, GLuint* program 
 
   //VERTEX SHADER
   text_ptr[0] = vs_text->c_str();
+  std::cerr << vs_text->c_str();
 
   shader = glCreateShader( GL_VERTEX_SHADER );
   glShaderSource( shader, 1, text_ptr, 0 );
@@ -793,7 +804,7 @@ void get_opengl_error( bool ignore )
   if( got_error )
   {
     std::cerr << errorstring;
-    glfwTerminate();
+    // glfwTerminate();
     return;
   }
 }
